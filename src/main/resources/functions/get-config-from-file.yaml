@@ -1,0 +1,32 @@
+apiVersion: core.openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: get-config-from-file
+spec:
+  version: "v1.0.0"
+  image: "openfunctiondev/get-config-from-file:v1"
+  imageCredentials:
+    name: push-secret
+  port: 8080 # default to 8080
+  build:
+    builder: openfunction/builder-java:v2-18
+    env:
+      FUNC_NAME: "dev.openfunction.samples.ConfigurationFromFile"
+      FUNC_CLEAR_SOURCE: "true"
+    srcRepo:
+      url: "https://github.com/OpenFunction/java-samples.git"
+      revision: "main"
+  serving:
+    template:
+      volumes:
+        - name: config
+          configMap:
+            name: get-config-from-file
+            defaultMode: 420
+      containers:
+        - name: function # DO NOT change this
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config
+              mountPath: /etc/openfunction/
+    runtime: "knative"

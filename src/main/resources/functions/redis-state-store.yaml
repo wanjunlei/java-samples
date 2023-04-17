@@ -1,0 +1,49 @@
+apiVersion: core.openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: redis-state-store
+spec:
+  version: "v1.0.0"
+  image: "openfunctiondev/redis-state-store:v1"
+  imageCredentials:
+    name: push-secret
+  port: 8080 # default to 8080
+  build:
+    builder: openfunction/builder-java:v2-18
+    env:
+      FUNC_NAME: "dev.openfunction.samples.StateStore"
+      FUNC_CLEAR_SOURCE: "true"
+      FUNCTION_FRAMEWORK_VERSION: "1.1.0-SNAPSHOT"
+      MAVEN_REPOSITORY: "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    srcRepo:
+      url: "https://github.com/OpenFunction/java-samples.git"
+      revision: "main"
+  serving:
+    params:
+      STATE_STORE_NAME: "redis-state-store"
+    template:
+      containers:
+        - name: function # DO NOT change this
+          imagePullPolicy: IfNotPresent
+    runtime: "knative"
+    outputs:
+      - name: sample
+        component: kafka
+        operation: "create"
+    bindings:
+      kafka:
+        type: bindings.kafka
+        version: v1
+        metadata:
+          - name: brokers
+            value: "kafka-server-kafka-brokers:9092"
+          - name: topics
+            value: "sample-topic"
+          - name: consumerGroup
+            value: "bindings-with-output"
+          - name: publishTopic
+            value: "sample-topic"
+          - name: authRequired
+            value: "false"
+          - name: authType
+            value: "none"

@@ -1,0 +1,26 @@
+apiVersion: core.openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: function-aggregation
+spec:
+  version: "v1.0.0"
+  image: "openfunctiondev/function-aggregation:v1"
+  imageCredentials:
+    name: push-secret
+  port: 8080 # default to 8080
+  build:
+    builder: openfunction/builder-java:v2-18
+    env:
+      FUNC_NAME: "dev.openfunction.samples.Aggregation"
+      FUNC_CLEAR_SOURCE: "true"
+    srcRepo:
+      url: "https://github.com/OpenFunction/java-samples.git"
+      revision: "main"
+  serving:
+    params:
+      FUNCTIONS: "http://get-config-from-configmap.default.svc.cluster.local/,http://get-config-from-file.default.svc.cluster.local/"
+    template:
+      containers:
+        - name: function # DO NOT change this
+          imagePullPolicy: IfNotPresent
+    runtime: "knative"

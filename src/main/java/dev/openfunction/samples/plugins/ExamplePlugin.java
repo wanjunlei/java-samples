@@ -21,6 +21,7 @@ import dev.openfunction.functions.Plugin;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 public class ExamplePlugin implements Plugin {
     private int seq = 0;
@@ -72,6 +73,16 @@ public class ExamplePlugin implements Plugin {
 
     @Override
     public Object getField(String fieldName) {
+        return null;
+    }
+
+    @Override
+    public Boolean needToTracing() {
+        return false;
+    }
+
+    @Override
+    public Map<String, String> tagsAddToTracing() {
         return null;
     }
 }

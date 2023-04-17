@@ -1,0 +1,33 @@
+apiVersion: core.openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: file-read-write
+spec:
+  version: "v1.0.0"
+  image: "openfunctiondev/file-read-write:v1"
+  imageCredentials:
+    name: push-secret
+  port: 8080 # default to 8080
+  build:
+    builder: openfunction/builder-java:v2-18
+    env:
+      FUNC_NAME: "dev.openfunction.samples.SimpleFileSystem"
+      FUNC_CLEAR_SOURCE: "true"
+    srcRepo:
+      url: "https://github.com/OpenFunction/java-samples.git"
+      revision: "main"
+  serving:
+    params:
+      ROOT_DIR: /data
+    template:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: test-pvc
+      containers:
+        - name: function # DO NOT change this
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: data
+              mountPath: /data/
+    runtime: "knative"
