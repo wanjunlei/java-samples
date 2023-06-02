@@ -111,23 +111,23 @@ spec:
   type: bindings.kafka
   version: v1
   metadata:
-    - name: brokers
-	  value: "kafka-server-kafka-brokers:9092"
-	- name: authRequired
-	  value: "false"
-	- name: publishTopic
-	  value: "samples"
-	- name: topics
-	  value: "samples"
-	- name: consumerGroup
-	  value: "http-with-output"
+  - name: brokers
+    value: "kafka-server-kafka-brokers:9092"
+  - name: authRequired
+    value: "false"
+  - name: publishTopic
+    value: "samples"
+  - name: topics
+    value: "samples"
+  - name: consumerGroup
+    value: "http-with-output"
 EOF
 ```
 
 创建 deployment
 
 ```shell
-kubectl apply -f ../src/main/resources/http-with-output.yaml
+kubectl apply -f ../src/main/resources/nocalhost/http-with-output.yaml
 ```
 
 在 **IDEA** 中打开 **Nocalhost**，选择上文中创建的 `deployment` ，右键选择 **Dev Config**
@@ -137,6 +137,10 @@ kubectl apply -f ../src/main/resources/http-with-output.yaml
 选择 **Yes** 会在浏览器中进行配置（需要联网），选择 **No**会在 **IDEA** 中打开配置文件。
 
 ![](images/nocalhost-dev-config.png)
+
+<span id="setimage">设置镜像</span>，选择 `java:11`
+
+![](images/nocalhost-dev-config-basic.png)
 
 设置启动命令
 
@@ -206,8 +210,7 @@ dev.openfunction.samples.HttpFunctionWithOutput
   name: "http-with-output"
   serviceType: "deployment"
   containers: 
-    - 
-      name: "nocalhost-dev"
+    - name: "nocalhost-dev"
       hub: null
       dev: 
         gitUrl: ""
@@ -228,20 +231,16 @@ dev.openfunction.samples.HttpFunctionWithOutput
         hotReload: false
         sync: null
         env: 
-          - 
-            name: "FUNCTION_CLASSPATH"
+          - name: "FUNCTION_CLASSPATH"
             value: "target/java-samples-1.0-SNAPSHOT.jar"
-          - 
-            name: "FUNCTION_TARGET"
+          - name: "FUNCTION_TARGET"
             value: "dev.openfunction.samples.HttpFunctionWithOutput"
-          - 
-            name: "FUNC_CONTEXT"
+          - name: "FUNC_CONTEXT"
             value: "{\"name\":\"HttpFunctionWithOutput\",\"version\":\"v2.0.0\",\"outputs\":{\"sample\":{\"uri\":\"sample-topic\",\"componentName\":\"msg\",\"componentType\":\"bindings.kafka\"}},\"runtime\":\"Knative\",\"port\":\"8080\"}"
         portForward: 
           - "8080:8080"
         patches: 
-          - 
-            patch: "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"dapr.io/app-id\":\"http-with-output\", \"dapr.io/app-port\": \"8080\", \"dapr.io/app-protocol\":\"grpc\",\"dapr.io/enabled\":\"true\",\"dapr.io/log-as-json\": \"true\",\"dapr.io/log-level\":\"debug\"}}}}}"
+          - patch: "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"dapr.io/app-id\":\"http-with-output\", \"dapr.io/app-port\": \"8080\", \"dapr.io/app-protocol\":\"grpc\",\"dapr.io/enabled\":\"true\",\"dapr.io/log-as-json\": \"true\",\"dapr.io/log-level\":\"debug\"}}}}}"
             type: "strategic"
 
 ```
@@ -317,16 +316,16 @@ spec:
   type: bindings.kafka
   version: v1
   metadata:
-    - name: brokers
-	  value: "kafka-server-kafka-brokers:9092"
-	- name: authRequired
-	  value: "false"
-	- name: publishTopic
-	  value: "input"
-	- name: topics
-	  value: "input"
-	- name: consumerGroup
-	  value: "async-input"
+  - name: brokers
+    value: "kafka-server-kafka-brokers:9092"
+  - name: authRequired
+    value: "false"
+  - name: publishTopic
+    value: "input"
+  - name: topics
+    value: "input"
+  - name: consumerGroup
+    value: "async-input"
 
 ---
 apiVersion: dapr.io/v1alpha1
@@ -337,23 +336,23 @@ spec:
   type: bindings.kafka
   version: v1
   metadata:
-    - name: brokers
-	  value: "kafka-server-kafka-brokers:9092"
-	- name: authRequired
-	  value: "false"
-	- name: publishTopic
-	  value: "output"
-	- name: topics
-	  value: "output"
-	- name: consumerGroup
-	  value: "async-output"
+  - name: brokers
+    value: "kafka-server-kafka-brokers:9092"
+  - name: authRequired
+    value: "false"
+  - name: publishTopic
+    value: "output"
+  - name: topics
+    value: "output"
+  - name: consumerGroup
+    value: "async-output"
 EOF
 ```
 
 创建 deployment
 
 ```shell
-kubectl apply -f src/main/resources/async-function.yaml
+kubectl apply -f ../src/main/resources/nocalhost/async-function.yaml
 ```
 
 参考上文配置 **Nocalhost** 的步骤配置 **Dev Config**。完整的配置文件如下
@@ -383,23 +382,48 @@ kubectl apply -f src/main/resources/async-function.yaml
         hotReload: false
         sync: null
         env: 
-          - 
-            name: "FUNCTION_CLASSPATH"
+          - name: "FUNCTION_CLASSPATH"
             value: "target/java-samples-1.0-SNAPSHOT.jar"
-          - 
-            name: "FUNCTION_TARGET"
+          - name: "FUNCTION_TARGET"
             value: "dev.openfunction.samples.AsyncFunction"
-          - 
-            name: "FUNC_CONTEXT"
+          - name: "FUNC_CONTEXT"
             value: "{\"name\":\"AsyncFunction\",\"version\":\"v2.0.0\",\"inputs\":{\"input\":{\"uri\":\"input\",\"componentName\":\"async-input\",\"componentType\":\"bindings.kafka\"}},\"outputs\":{\"output\":{\"uri\":\"output\",\"componentName\":\"async-output\",\"componentType\":\"bindings.kafka\"}},\"runtime\":\"Async\",\"port\":\"8080\"}"
         portForward: 
           - "8080:8080"
         patches: 
-          - 
-            type: "strategic"
+          - type: "strategic"
             patch: "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"dapr.io/app-id\":\"http-with-output\", \"dapr.io/app-port\": \"8080\", \"dapr.io/app-protocol\":\"grpc\",\"dapr.io/enabled\":\"true\",\"dapr.io/log-as-json\": \"true\",\"dapr.io/log-level\":\"debug\"}}}}}"
 ```
 
 启动 **Remote Debug**，等待函数启动成功。 向 input topic 中写入数据即可触发断点。
 
+# 定制 Nocalhost 镜像
 
+由于 **Nocalhost** 的镜像中没有缓存 maven 的依赖，所以每次重启 **Nocalhost** 的 **DevMode** 后，第一次执行 **Remote Run** 或 **Remote Debug** 时
+需要花费一定的时间拉取依赖，我们可以通知定制 **Nocalhost** 的镜像来加快启动的速度。
+
+创建以下 Dockerfile
+
+```
+FROM nocalhost-docker.pkg.coding.net/nocalhost/dev-images/java:11
+
+RUN git clone https://github.com/OpenFunction/java-samples && \
+  cd java-samples && \
+  mvn clean package && \
+  cd .. && \
+  rm -rf java-samples
+
+ENTRYPOINT [ "/bin/zsh" ]
+CMD ["-l"]
+```
+
+编译镜像
+
+```shell
+docker build -t < your repo >/nocalhost-dev-java:11 .
+docker push < your repo >/nocalhost-dev-java:11
+```
+
+在 [设置镜像](#setimage) 时使用自制镜像即可
+
+> 针对本示例可以使用 `openfunctiondev/nocalhost-dev-java:11`。
