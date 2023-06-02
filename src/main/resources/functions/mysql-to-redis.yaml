@@ -13,14 +13,12 @@ spec:
     env:
       FUNC_NAME: "dev.openfunction.samples.MysqlToRedis"
       FUNC_CLEAR_SOURCE: "true"
-      FUNCTION_FRAMEWORK_VERSION: "1.1.0-SNAPSHOT"
-      MAVEN_REPOSITORY: "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+      FUNCTION_FRAMEWORK_VERSION: "1.1.0"
     srcRepo:
       url: "https://github.com/OpenFunction/java-samples.git"
       revision: "main"
   serving:
     params:
-      REDIS_STATE_STORE_NAME: "redis-state-store"
       JDBC_DRIVER: "com.mysql.cj.jdbc.Driver"
       MYSQL_URL: "jdbc:mysql://mysql:3306/?useSSL=false&allowPublicKeyRetrieval=true"
       MYSQL_USER: "root"
@@ -42,4 +40,14 @@ spec:
         metadata:
           - name: schedule
             value: "@every 5s"
-
+    states:
+      redis:
+        type: state.redis
+        version: v1
+        metadata:
+          - name: redisHost
+            value: redis:6379
+          - name: redisPassword
+            value: ""
+          - name: keyPrefix
+            value: appid

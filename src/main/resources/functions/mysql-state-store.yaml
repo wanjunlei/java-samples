@@ -13,8 +13,7 @@ spec:
     env:
       FUNC_NAME: "dev.openfunction.samples.StateStore"
       FUNC_CLEAR_SOURCE: "true"
-      FUNCTION_FRAMEWORK_VERSION: "1.1.0-SNAPSHOT"
-      MAVEN_REPOSITORY: "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+      FUNCTION_FRAMEWORK_VERSION: "1.1.0"
     srcRepo:
       url: "https://github.com/OpenFunction/java-samples.git"
       revision: "main"
@@ -26,24 +25,18 @@ spec:
         - name: function # DO NOT change this
           imagePullPolicy: IfNotPresent
     runtime: "knative"
-    outputs:
-      - name: sample
-        component: kafka
-        operation: "create"
-    bindings:
-      kafka:
-        type: bindings.kafka
+    states:
+      mysql:
+        type: state.mysql
         version: v1
         metadata:
-          - name: brokers
-            value: "kafka-server-kafka-brokers:9092"
-          - name: topics
-            value: "sample-topic"
-          - name: consumerGroup
-            value: "bindings-with-output"
-          - name: publishTopic
-            value: "sample-topic"
-          - name: authRequired
-            value: "false"
-          - name: authType
-            value: "none"
+          - name: connectionString
+            value: "mysql:123456@tcp(mysql:3306)/?allowNativePasswords=true"
+          - name: schemaName
+            value: "dapr_state_store"
+          - name: tableName
+            value: "state"
+          - name: timeoutInSeconds
+            value: "30"
+          - name: keyPrefix
+            value: appid

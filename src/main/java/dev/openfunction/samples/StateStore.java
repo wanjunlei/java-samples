@@ -12,20 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public class StateStore extends Routable implements OpenFunction {
-    private static final String StateStoreNameENV = "STATE_STORE_NAME";
 
     private static final Gson GSON = new GsonBuilder().create();
-
-    private  String stateStoreName;
-
-    public StateStore() {
-        String val = System.getenv(StateStoreNameENV);
-        if (val == null || val.length() == 0) {
-            System.out.println("WARNING: no state store set");
-        } else {
-            stateStoreName = val;
-        }
-    }
 
     @Override
     public String[] getMethods() {
@@ -39,19 +27,29 @@ public class StateStore extends Routable implements OpenFunction {
             return new Out().setError(new Error("dapr client is null"));
         }
 
-        switch (context.getHttpRequest().getMethod().toUpperCase()) {
-            case Routable.METHOD_GET:
-                return get(daprClient, context.getHttpRequest().getQueryParameters().get("key"));
-            case Routable.METHOD_POST:
-                return save(daprClient, payload);
-            case Routable.METHOD_DELETE:
-                return delete(daprClient, context.getHttpRequest().getQueryParameters().get("key"));
-            default:
-                return null;
+        Map<String, Component> states = context.getStates();
+        if (states == null) {
+            return new Out().setData(ByteBuffer.wrap("no state store found".getBytes()));
         }
+
+        // We assume that there is only one state
+        for (String name : states.keySet()) {
+            switch (context.getHttpRequest().getMethod().toUpperCase()) {
+                case Routable.METHOD_GET:
+                    return get(daprClient, states.get(name).getComponentName(), context.getHttpRequest().getQueryParameters().get("key"));
+                case Routable.METHOD_POST:
+                    return save(daprClient, states.get(name).getComponentName(), payload);
+                case Routable.METHOD_DELETE:
+                    return delete(daprClient, states.get(name).getComponentName(), context.getHttpRequest().getQueryParameters().get("key"));
+                default:
+                    return null;
+            }
+        }
+
+        return null;
     }
 
-    public Out get(DaprClient daprClient, List<String> keys) {
+    public Out get(DaprClient daprClient, String stateStoreName, List<String> keys) {
         if (keys == null || keys.size() == 0) {
             return new Out().setData(ByteBuffer.wrap(("get 0 states").getBytes()));
         }
@@ -60,7 +58,7 @@ public class StateStore extends Routable implements OpenFunction {
         return new Out().setData(ByteBuffer.wrap(GSON.toJson(states).getBytes()));
     }
 
-    public Out save(DaprClient daprClient, String payload) throws Exception {
+    public Out save(DaprClient daprClient, String stateStoreName, String payload) throws Exception {
         Map<String, String> states = GSON.getAdapter(Map.class).fromJson(payload);
         if (states == null || states.isEmpty()) {
             return new Out().setData(ByteBuffer.wrap(("save 0 states").getBytes()));
@@ -76,7 +74,7 @@ public class StateStore extends Routable implements OpenFunction {
         return new Out().setData(ByteBuffer.wrap(("save " + stateList.size() + " states").getBytes()));
     }
 
-    public Out delete(DaprClient daprClient, List<String> keys) {
+    public Out delete(DaprClient daprClient, String stateStoreName, List<String> keys) {
         if (keys == null || keys.size() == 0) {
             return new Out().setData(ByteBuffer.wrap(("delete 0 states").getBytes()));
         }

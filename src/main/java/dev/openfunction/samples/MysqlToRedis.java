@@ -1,11 +1,13 @@
 package dev.openfunction.samples;
 
+import dev.openfunction.functions.Component;
 import dev.openfunction.functions.Context;
 import dev.openfunction.functions.OpenFunction;
 import dev.openfunction.functions.Out;
 import io.dapr.client.DaprClient;
 import io.dapr.client.domain.State;
 
+import java.nio.ByteBuffer;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MysqlToRedis implements OpenFunction {
-
-    private static final String RedisStateStoreNameENV = "REDIS_STATE_STORE_NAME";
-
     private static final String JDBCDriverENV = "JDBC_DRIVER";
     private static final String MysqlURLENV = "MYSQL_URL";
     private static final String MysqlUserENV = "MYSQL_USER";
@@ -23,7 +22,6 @@ public class MysqlToRedis implements OpenFunction {
     private static final String MysqlTableENV = "MYSQL_TABLE";
     private static final String PrimaryKeyENV = "PRIMARY_KEY";
 
-    private String redisStateStoreName;
     private final String jdbcDriver;
     private final String mysqlURL;
     private final String mysqlUser;
@@ -32,13 +30,6 @@ public class MysqlToRedis implements OpenFunction {
     private final String primaryKey;
 
     public MysqlToRedis() {
-        String val1 = System.getenv(RedisStateStoreNameENV);
-        if (val1 == null || val1.length() == 0) {
-            System.out.println("WARNING: no redis stat store set");
-        } else {
-            redisStateStoreName = val1;
-        }
-
         jdbcDriver = System.getenv(JDBCDriverENV);
         mysqlURL = System.getenv(MysqlURLENV);
         mysqlUser = System.getenv(MysqlUserENV);
@@ -59,7 +50,7 @@ public class MysqlToRedis implements OpenFunction {
             return null;
         }
 
-        writeToRedis(daprClient, states);
+        writeToRedis(context, daprClient, states);
 
         return null;
     }
@@ -90,13 +81,20 @@ public class MysqlToRedis implements OpenFunction {
         return results;
     }
 
-    private void writeToRedis(DaprClient daprClient, Map<String, Object> states) {
+    private void writeToRedis(Context context, DaprClient daprClient, Map<String, Object> states) {
         List<State<?>> stateList = new ArrayList<>();
         for (String key : states.keySet()) {
             stateList.add(new State<>(key, states.get(key), ""));
         }
 
-        daprClient.saveBulkState(redisStateStoreName, stateList).block();
-        System.out.println("save " + stateList.size() + " states");
+        Map<String, Component> stateStore = context.getStates();
+        if (stateStore == null) {
+            return;
+        }
+
+        for (String name : stateStore.keySet()) {
+            daprClient.saveBulkState(stateStore.get(name).getComponentName(), stateList).block();
+            System.out.println("save " + stateList.size() + " states");
+        }
     }
 }
