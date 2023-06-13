@@ -16,21 +16,31 @@ limitations under the License.
 
 package dev.openfunction.samples;
 
+import dev.openfunction.functions.Component;
 import dev.openfunction.functions.Context;
 import dev.openfunction.functions.OpenFunction;
 import dev.openfunction.functions.Out;
+import io.dapr.client.DaprClient;
 
-public class AsyncFunction implements OpenFunction {
+public class OpenFunctionImpl implements OpenFunction {
 
     @Override
     public Out accept(Context context, String payload) throws Exception {
         System.out.printf("receive event: %s", payload).println();
 
+        DaprClient daprClient = context.getDaprClient();
+        if (daprClient == null) {
+            return new Out();
+        }
+
         if (context.getOutputs() != null) {
             for (String key : context.getOutputs().keySet()) {
-                Error error = context.send(key, payload);
-                if (error != null) {
-                    System.out.println("send to output " + key + " error, " + error.getMessage());
+                Component output = context.getOutputs().get(key);
+                if (output.isPubsub()) {
+                    daprClient.publishEvent(output.getComponentName(), output.getTopic(), payload, output.getMetadata());
+                } else if (output.isBinding()) {
+                    // We recommend using CloudEvents to pass data between Dapr components.
+                    daprClient.invokeBinding(output.getComponentName(), output.getOperation(), context.packageAsCloudevent(payload));
                 }
             }
         }
