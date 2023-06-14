@@ -20,7 +20,7 @@ import dev.openfunction.functions.HttpFunction;
 import dev.openfunction.functions.HttpRequest;
 import dev.openfunction.functions.HttpResponse;
 
-public class HttpFunctionWithoutOutput implements HttpFunction {
+public class HttpFunctionImpl implements HttpFunction {
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {

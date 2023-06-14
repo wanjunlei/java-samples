@@ -14,21 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package dev.openfunction.samples.plugins;
+package dev.openfunction.samples.hooks;
 
 import dev.openfunction.functions.Context;
-import dev.openfunction.functions.Plugin;
+import dev.openfunction.functions.Hook;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
-public class ExamplePlugin implements Plugin {
+public class ExampleHook implements Hook {
     private int seq = 0;
 
     @Override
     public String name() {
-        return "plugin-example";
+        return "hook-example";
     }
 
     @Override
@@ -37,48 +37,34 @@ public class ExamplePlugin implements Plugin {
     }
 
     @Override
-    public Plugin init() {
+    public Hook init() {
         return this;
     }
 
     @Override
-    public Error execPreHook(Context ctx) {
-        execHook(ctx, "pre");
-        return null;
-    }
-
-    @Override
-    public Error execPostHook(Context ctx) {
-        execHook(ctx, "post");
-        return null;
-    }
-
-    private void execHook(Context ctx, String type) {
+    public Error execute(Context ctx) {
         String ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.XXX").format(new Date());
         if (ctx.getBindingEvent() != null) {
-            System.out.printf("plugin %s:%s exec %s hook for binding %s at %s, seq %d", name(), version(), type, ctx.getBindingEvent().getName(), ts, seq).println();
+            System.out.printf("hook %s:%s exec for binding %s at %s, seq %d", name(), version(), ctx.getBindingEvent().getName(), ts, seq).println();
         } else if (ctx.getTopicEvent() != null) {
-            System.out.printf("plugin %s:%s exec %s hook for pubsub %s at %s, seq %d", name(), version(), type, ctx.getTopicEvent().getName(), ts, seq).println();
+            System.out.printf("hook %s:%s exec for pubsub %s at %s, seq %d", name(), version(), ctx.getTopicEvent().getName(), ts, seq).println();
         } else if (ctx.getHttpRequest() != null) {
             if (ctx.getCloudEvent() != null) {
-                System.out.printf("plugin %s:%s exec %s hook for cloudevent function at %s, seq %d", name(), version(), type, ts, seq).println();
+                System.out.printf("hook %s:%s exec for cloudevent function at %s, seq %d", name(), version(), ts, seq).println();
             } else {
-                System.out.printf("plugin %s:%s exec %s hook for http function at %s, seq %d", name(), version(), type, ts, seq).println();
+                System.out.printf("hook %s:%s exec for http function at %s, seq %d", name(), version(), ts, seq).println();
             }
         } else {
             System.out.println("unknown function type");
         }
         seq++;
-    }
 
-    @Override
-    public Object getField(String fieldName) {
         return null;
     }
 
     @Override
     public Boolean needToTracing() {
-        return false;
+        return true;
     }
 
     @Override

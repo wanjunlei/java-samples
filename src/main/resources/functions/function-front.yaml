@@ -1,52 +1,55 @@
-apiVersion: core.openfunction.io/v1beta1
+apiVersion: core.openfunction.io/v1beta2
 kind: Function
 metadata:
   name: function-front
-  annotations:
-    plugins: |
-      pre:
-      - dev.openfunction.samples.plugins.ExamplePlugin
-      post:
-      - dev.openfunction.samples.plugins.ExamplePlugin
+  namespace: default
 spec:
-  version: "v1.0.0"
-  image: "openfunctiondev/sample-knative-dapr-java:v1"
-  imageCredentials:
-    name: push-secret
-  port: 8080 # default to 8080
   build:
     builder: openfunction/builder-java:v2-18
     env:
-      FUNC_NAME: "dev.openfunction.samples.AsyncFunction"
       FUNC_CLEAR_SOURCE: "true"
+      FUNC_NAME: dev.openfunction.samples.OpenFunctionImpl
+    shipwright:
+      params:
+        - name: CACHE_IMAGE
+          value: openfunctiondev/java-sample-cache:v2
     srcRepo:
-      url: "https://github.com/OpenFunction/java-samples.git"
-      revision: "main"
+      revision: main
+      url: https://github.com/OpenFunction/java-samples.git
+  image: openfunctiondev/sample-knative-dapr-java:v2
+  imageCredentials:
+    name: push-secret
   serving:
-    scaleOptions:
-      minReplicas: 0
-      maxReplicas: 5
-    runtime: knative
-    outputs:
-      - name: target
-        component: kafka-server
-        operation: "create"
     bindings:
       kafka-server:
-        type: bindings.kafka
-        version: v1
         metadata:
           - name: brokers
-            value: "kafka-server-kafka-brokers:9092"
+            value: kafka-server-kafka-brokers:9092
           - name: authRequired
             value: "false"
           - name: publishTopic
-            value: "sample-topic"
+            value: sample-topic
           - name: topics
-            value: "sample-topic"
+            value: sample-topic
           - name: consumerGroup
-            value: "function-front"
+            value: function-front
+        type: bindings.kafka
+        version: v1
+    hooks:
+      post:
+        - dev.openfunction.samples.hooks.ExampleHook
+      pre:
+        - dev.openfunction.samples.hooks.ExampleHook
+    outputs:
+      - dapr:
+          name: kafka-server
+          operation: create
+          type: bindings.kafka
+    scaleOptions:
+      maxReplicas: 5
+      minReplicas: 0
     template:
       containers:
-        - name: function # DO NOT change this
-          imagePullPolicy: IfNotPresent 
+        - imagePullPolicy: IfNotPresent
+          name: function
+  version: v1.0.0
